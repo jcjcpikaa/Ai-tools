@@ -1,0 +1,2229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Models Deep Dive</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        :root {
+            --chatgpt-color: #10A37F;
+            --chatgpt-gradient: linear-gradient(135deg, #10A37F 0%, #0A906E 100%);
+            --claude-color: #7C3AED;
+            --claude-gradient: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+            --gemini-color: #4285F4;
+            --gemini-gradient: linear-gradient(135deg, #4285F4 0%, #185ABC 100%);
+            --grok-color: #5865F2;
+            --grok-gradient: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+            --deepseek-color: #FF6B6B;
+            --deepseek-gradient: linear-gradient(135deg, #FF6B6B 0%, #EE5253 100%);
+            --commandr-color: #F97316;
+            --commandr-gradient: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+            --ayavision-color: #EC4899;
+            --ayavision-gradient: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);
+            --qwen-color: #22C55E;
+            --qwen-gradient: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+            --llama-color: #A855F7;
+            --llama-gradient: linear-gradient(135deg, #A855F7 0%, #9333EA 100%);
+            --exaone-color: #3B82F6;
+            --exaone-gradient: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+            --minimax-color: #EF4444;
+            --minimax-gradient: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+            --ministral-color: #FBBF24;
+            --ministral-gradient: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+            
+            --bg-color: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --border-color: #E2E8F0;
+        }
+        
+        .dark-mode {
+            --bg-color: #0F172A;
+            --card-bg: #1E293B;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --border-color: #334155;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0;
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, #2D3748 0%, #1A202C 100%);
+            color: white;
+            padding: 3rem 5%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header-inner {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.2;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(16, 163, 127, 0.4) 0%, transparent 30%),
+                radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.4) 0%, transparent 30%),
+                radial-gradient(circle at 50% 70%, rgba(66, 133, 244, 0.4) 0%, transparent 30%),
+                radial-gradient(circle at 10% 80%, rgba(88, 101, 242, 0.4) 0%, transparent 20%),
+                radial-gradient(circle at 90% 90%, rgba(255, 107, 107, 0.4) 0%, transparent 20%);
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #FFFFFF 0%, #E2E8F0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+        
+        .subtitle {
+            font-size: 1.5rem;
+            max-width: 800px;
+            margin-bottom: 2rem;
+            color: #E2E8F0;
+            font-weight: 400;
+        }
+        
+        .header-action {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 0.8rem;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Navigation Styles */
+        .main-nav {
+            background-color: rgba(var(--card-bg), 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 5%;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+        
+        .model-tabs {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding: 0.5rem;
+            scrollbar-width: thin;
+            scroll-behavior: smooth;
+        }
+        
+        .model-tab {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .model-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .model-tab.active {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            border-color: currentColor;
+        }
+        
+        .model-tab.active.chatgpt { 
+            color: var(--chatgpt-color); 
+            background: rgba(16, 163, 127, 0.1);
+        }
+        .model-tab.active.claude { 
+            color: var(--claude-color); 
+            background: rgba(124, 58, 237, 0.1);
+        }
+        .model-tab.active.gemini { 
+            color: var(--gemini-color); 
+            background: rgba(66, 133, 244, 0.1);
+        }
+        .model-tab.active.grok { 
+            color: var(--grok-color); 
+            background: rgba(88, 101, 242, 0.1);
+        }
+        .model-tab.active.deepseek { 
+            color: var(--deepseek-color); 
+            background: rgba(255, 107, 107, 0.1);
+        }
+        .model-tab.active.commandr { 
+            color: var(--commandr-color); 
+            background: rgba(249, 115, 22, 0.1);
+        }
+        .model-tab.active.ayavision { 
+            color: var(--ayavision-color); 
+            background: rgba(236, 72, 153, 0.1);
+        }
+        .model-tab.active.qwen { 
+            color: var(--qwen-color); 
+            background: rgba(34, 197, 94, 0.1);
+        }
+        .model-tab.active.llama { 
+            color: var(--llama-color); 
+            background: rgba(168, 85, 247, 0.1);
+        }
+        .model-tab.active.exaone { 
+            color: var(--exaone-color); 
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .model-tab.active.minimax { 
+            color: var(--minimax-color); 
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .model-tab.active.ministral { 
+            color: var(--ministral-color); 
+            background: rgba(251, 191, 36, 0.1);
+        }
+        
+        /* Main Content */
+        .main-content {
+            padding: 3rem 5%;
+        }
+        
+        .model-content {
+            display: none;
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        .model-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Card Styles */
+        .hero-card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        
+        .hero-header {
+            position: relative;
+            padding: 0;
+            height: 220px;
+            overflow: hidden;
+        }
+        
+        .hero-header-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .hero-header-content {
+            position: relative;
+            z-index: 2;
+            padding: 3rem;
+            color: white;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .hero-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .hero-header p {
+            font-size: 1.2rem;
+            max-width: 60%;
+            opacity: 0.9;
+        }
+        
+        .hero-logo {
+            position: absolute;
+            right: 3rem;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 120px;
+            width: 120px;
+            border-radius: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .hero-content {
+            padding: 3rem;
+        }
+        
+        .chip-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin: 1.5rem 0;
+        }
+        
+        .chip {
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        
+        .chip i {
+            font-size: 0.8rem;
+        }
+        
+        /* Grid Layouts */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .detail-card {
+            background-color: var(--bg-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .detail-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        
+        .detail-card h4 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+        
+        .detail-card p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+        
+        /* Sections */
+        .section {
+            margin-bottom: 2.5rem;
+        }
+        
+        .section h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .section p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+        
+        .feature-list {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature-list li {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+        
+        .feature-list li:before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+        
+        .feature-list li strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        /* Comparison Table */
+        .comparison-section {
+            margin: 4rem 0;
+            overflow: hidden;
+            border-radius: 16px;
+            background-color: var(--card-bg);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        
+        .comparison-header {
+            padding: 2rem 3rem;
+            background: linear-gradient(135deg, #2D3748 0%, #1A202C 100%);
+            color: white;
+        }
+        
+        .comparison-header h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .comparison-header p {
+            color: #E2E8F0;
+            max-width: 800px;
+        }
+        
+        .comparison-table-wrapper {
+            padding: 2rem 3rem;
+            overflow-x: auto;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1.2rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .comparison-table th {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .comparison-table td {
+            color: var(--text-secondary);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tbody tr:hover {
+            background-color: var(--bg-color);
+        }
+        
+        /* Model-specific styles */
+        .model-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .chatgpt-bg { background: var(--chatgpt-gradient); }
+        .claude-bg { background: var(--claude-gradient); }
+        .gemini-bg { background: var(--gemini-gradient); }
+        .grok-bg { background: var(--grok-gradient); }
+        .deepseek-bg { background: var(--deepseek-gradient); }
+        .commandr-bg { background: var(--commandr-gradient); }
+        .ayavision-bg { background: var(--ayavision-gradient); }
+        .qwen-bg { background: var(--qwen-gradient); }
+        .llama-bg { background: var(--llama-gradient); }
+        .exaone-bg { background: var(--exaone-gradient); }
+        .minimax-bg { background: var(--minimax-gradient); }
+        .ministral-bg { background: var(--ministral-gradient); }
+        
+        .chatgpt-text { color: var(--chatgpt-color); }
+        .claude-text { color: var(--claude-color); }
+        .gemini-text { color: var(--gemini-color); }
+        .grok-text { color: var(--grok-color); }
+        .deepseek-text { color: var(--deepseek-color); }
+        .commandr-text { color: var(--commandr-color); }
+        .ayavision-text { color: var(--ayavision-color); }
+        .qwen-text { color: var(--qwen-color); }
+        .llama-text { color: var(--llama-color); }
+        .exaone-text { color: var(--exaone-color); }
+        .minimax-text { color: var(--minimax-color); }
+        .ministral-text { color: var(--ministral-color); }
+        
+        /* Performance Chart */
+        .performance-chart {
+            padding: 2rem;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            margin-bottom: 3rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        
+        .chart-header {
+            margin-bottom: 2rem;
+        }
+        
+        .chart-header h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            border: none;
+            padding: 0;
+        }
+        
+        .chart-header p {
+            color: var(--text-secondary);
+        }
+        
+        .skills-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        
+        .skill-category {
+            margin-bottom: 2rem;
+        }
+        
+        .skill-category h4 {
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+        
+        .skill-bar-container {
+            margin-bottom: 1.2rem;
+        }
+        
+        .skill-name {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .skill-name span {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .skill-bar {
+            height: 8px;
+            border-radius: 4px;
+            background-color: var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .skill-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1.5s ease;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #1A202C;
+            color: #E2E8F0;
+            padding: 3rem 5%;
+            text-align: center;
+        }
+        
+        footer p {
+            max-width: 800px;
+            margin: 0 auto 1rem;
+            opacity: 0.8;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .hero-header {
+                height: auto;
+            }
+            
+            .hero-header-content {
+                padding: 2rem;
+            }
+            
+            .hero-logo {
+                position: relative;
+                right: auto;
+                top: auto;
+                transform: none;
+                margin: 2rem auto 0;
+            }
+            
+            .hero-header p {
+                max-width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1.2rem;
+            }
+            
+            .hero-content, .comparison-table-wrapper {
+                padding: 1.5rem;
+            }
+            
+            .hero-header h2 {
+                font-size: 2rem;
+            }
+            
+            .section h3 {
+                font-size: 1.3rem;
+            }
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        /* New Feature Cards */
+        .feature-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .feature-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            color: white;
+        }
+        
+        .feature-content {
+            padding: 1.5rem;
+        }
+        
+        .feature-content h4 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .feature-content p {
+            color: var(--text-secondary);
+            margin-bottom: 0;
+            font-size: 0.95rem;
+        }
+        
+        /* Technical Specs Table */
+        .tech-specs {
+            background-color: var(--bg-color);
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+        }
+        
+        .tech-specs-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tech-specs-header h4 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+        
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .specs-table tr td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .specs-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .specs-table tr td:first-child {
+            font-weight: 500;
+            color: var(--text-primary);
+            width: 40%;
+        }
+        
+        .specs-table tr td:last-child {
+            color: var(--text-secondary);
+        }
+        
+        /* Use Cases Section */
+        .use-cases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .use-case-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .use-case-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+        
+        .use-case-icon {
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            color: white;
+        }
+        
+        .use-case-content {
+            padding: 1.5rem;
+        }
+        
+        .use-case-content h4 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+        
+        .use-case-content p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Timeline section */
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+        
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            background-color: var(--border-color);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -3px;
+            border-radius: 3px;
+        }
+        
+        .timeline-item {
+            padding: 10px 40px;
+            position: relative;
+            width: 50%;
+            box-sizing: border-box;
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: var(--card-bg);
+            border: 4px solid var(--border-color);
+            top: 15px;
+            right: -14px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        
+        .left {
+            left: 0;
+        }
+        
+        .right {
+            left: 50%;
+        }
+        
+        .right::after {
+            left: -14px;
+        }
+        
+        .timeline-content {
+            padding: 20px 30px;
+            background-color: var(--card-bg);
+            position: relative;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+        
+        .timeline-content h4 {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+        
+        .timeline-content p {
+            margin-bottom: 0;
+            color: var(--text-secondary);
+        }
+        
+        .timeline-date {
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .timeline::after {
+                left: 31px;
+            }
+            
+            .timeline-item {
+                width: 100%;
+                padding-left: 70px;
+                padding-right: 25px;
+            }
+            
+            .timeline-item::after {
+                left: 17px;
+            }
+            
+            .right {
+                left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header>
+            <div class="header-bg"></div>
+            <div class="header-inner">
+                <h1>Advanced AI Models: The Definitive Comparison</h1>
+                <p class="subtitle">A concise analysis of leading AI language models in 2025: capabilities, strengths, and use cases</p>
+                <div class="header-action">
+                    <button class="theme-toggle" onclick="toggleTheme()">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Navigation -->
+        <nav class="main-nav">
+            <div class="nav-container">
+                <div class="logo">AI Model Explorer</div>
+                <div class="model-tabs">
+                    <button class="model-tab active overview" onclick="openTab('overview')">
+                        <i class="fas fa-chart-line"></i> Overview
+                    </button>
+                    <button class="model-tab chatgpt" onclick="openTab('chatgpt')">
+                        <i class="fas fa-robot"></i> ChatGPT
+                    </button>
+                    <button class="model-tab claude" onclick="openTab('claude')">
+                        <i class="fas fa-brain"></i> Claude
+                    </button>
+                    <button class="model-tab gemini" onclick="openTab('gemini')">
+                        <i class="fas fa-star-half-alt"></i> Gemini
+                    </button>
+                    <button class="model-tab grok" onclick="openTab('grok')">
+                        <i class="fas fa-bolt"></i> Grok 3
+                    </button>
+                    <button class="model-tab deepseek" onclick="openTab('deepseek')">
+                        <i class="fas fa-code"></i> DeepSeek
+                    </button>
+                    <button class="model-tab commandr" onclick="openTab('commandr')">
+                        <i class="fas fa-search"></i> Command R+
+                    </button>
+                    <button class="model-tab ayavision" onclick="openTab('ayavision')">
+                        <i class="fas fa-image"></i> Aya Vision
+                    </button>
+                    <button class="model-tab qwen" onclick="openTab('qwen')">
+                        <i class="fas fa-globe"></i> Qwen 2.5
+                    </button>
+                    <button class="model-tab llama" onclick="openTab('llama')">
+                        <i class="fas fa-code-branch"></i> Llama 3.3
+                    </button>
+                    <button class="model-tab exaone" onclick="openTab('exaone')">
+                        <i class="fas fa-file-alt"></i> EXAONE 3.0
+                    </button>
+                    <button class="model-tab minimax" onclick="openTab('minimax')">
+                        <i class="fas fa-file-text"></i> Minimax-Text-01
+                    </button>
+                    <button class="model-tab ministral" onclick="openTab('ministral')">
+                        <i class="fas fa-tachometer-alt"></i> Ministral 3B
+                    </button>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="main-content">
+            <!-- Overview Tab Content -->
+            <div id="overview" class="model-content active">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg" style="background: linear-gradient(135deg, #2D3748 0%, #1A202C 100%);"></div>
+                        <div class="hero-header-content">
+                            <h2>The 2025 AI Landscape</h2>
+                            <p>Comparing leading AI models and their unique strengths</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="section">
+                            <h3><i class="fas fa-globe"></i> AI in 2025</h3>
+                            <p>AI models in 2025 are multimodal powerhouses, excelling in text, coding, and creative tasks. Each model offers distinct strengths, from reasoning to real-time data access.</p>
+                            
+                            <div class="feature-cards">
+                                <div class="feature-card">
+                                    <div class="feature-icon" style="background: linear-gradient(135deg, #4F46E5 0%, #2D3A8C 100%);">
+                                        <i class="fas fa-brain"></i>
+                                    </div>
+                                    <div class="feature-content">
+                                        <h4>Reasoning</h4>
+                                        <p>Advanced logical and analytical capabilities for complex problem-solving.</p>
+                                    </div>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon" style="background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%);">
+                                        <i class="fas fa-project-diagram"></i>
+                                    </div>
+                                    <div class="feature-content">
+                                        <h4>Multimodal</h4>
+                                        <p>Processing text, images, and more for versatile interactions.</p>
+                                    </div>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon" style="background: linear-gradient(135deg, #10B981 0%, #047857 100%);">
+                                        <i class="fas fa-code-branch"></i>
+                                    </div>
+                                    <div class="feature-content">
+                                        <h4>Specialization</h4>
+                                        <p>Domain-specific expertise in coding, writing, and research.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="comparison-section">
+                            <div class="comparison-header">
+                                <h2>Model Comparison</h2>
+                                <p>Key features and ideal applications of top AI models</p>
+                            </div>
+                            <div class="comparison-table-wrapper">
+                                <table class="comparison-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Model</th>
+                                            <th>Strengths</th>
+                                            <th>Weaknesses</th>
+                                            <th>Best For</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span class="model-icon chatgpt-bg"></span> ChatGPT</td>
+                                            <td>Versatile, multimodal, web access</td>
+                                            <td>Higher cost, occasional errors</td>
+                                            <td>General use, enterprise</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="model-icon claude-bg"></span> Claude</td>
+                                            <td>Reasoning, safe responses</td>
+                                            <td>No web browsing</td>
+                                            <td>Writing, analysis</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="model-icon gemini-bg"></span> Gemini</td>
+                                            <td>Multimodal, Google integration</td>
+                                            <td>Weaker reasoning</td>
+                                            <td>Multimedia, research</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="model-icon grok-bg"></span> Grok 3</td>
+                                            <td>Coding, reasoning, real-time data</td>
+                                            <td>Limited multimodal</td>
+                                            <td>Technical tasks, research</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="model-icon deepseek-bg"></span> DeepSeek</td>
+                                            <td>Coding, cost-effective</td>
+                                            <td>Security concerns</td>
+                                            <td>Programming</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="model-icon commandr-bg"></span> Command R+</td>
+                                            <td>RAG, multilingual</td>
+                                            <td>Limited general use</td>
+                                            <td>Enterprise, search</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="model-icon ayavision-bg"></span> Aya Vision</td>
+                                            <td>Image captioning, multilingual</td>
+                                            <td>Narrow focus</td>
+                                            <td>Visual tasks, non-English</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="model-icon qwen-bg"></span> Qwen 2.5</td>
+                                            <td>Multilingual, coding</td>
+                                            <td>Regional restrictions</td>
+                                            <td>E-commerce, programming</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="model-icon llama-bg"></span> Llama 3.3</td>
+                                            <td>Open-source, customizable</td>
+                                            <td>Resource-intensive</td>
+                                            <td>Research, development</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="model-icon exaone-bg"></span> EXAONE 3.0</td>
+                                            <td>Document analysis, coding</td>
+                                            <td>Limited accessibility</td>
+                                            <td>Enterprise tasks</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="model-icon minimax-bg"></span> Minimax-Text-01</td>
+                                            <td>Long context, reasoning</td>
+                                            <td>Limited multimodal</td>
+                                            <td>Document summarization</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="model-icon ministral-bg"></span> Ministral 3B</td>
+                                            <td>Efficient, low-latency</td>
+                                            <td>Smaller scale</td>
+                                            <td>Edge devices, quick tasks</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ChatGPT Tab Content -->
+            <div id="chatgpt" class="model-content">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg chatgpt-bg"></div>
+                        <div class="hero-header-content">
+                            <h2>ChatGPT</h2>
+                            <p>OpenAI's versatile AI with broad capabilities</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="chip-container">
+                            <div class="chip chatgpt-bg">
+                                <i class="fas fa-microchip"></i> Multimodal
+                            </div>
+                            <div class="chip chatgpt-bg">
+                                <i class="fas fa-globe"></i> Web Access
+                            </div>
+                            <div class="chip chatgpt-bg">
+                                <i class="fas fa-code"></i> Coding
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-fingerprint"></i> Overview</h3>
+                            <p>ChatGPT, by OpenAI, is a widely-used AI excelling in text, coding, and creative tasks with real-time web access.</p>
+                            
+                            <div class="tech-specs">
+                                <div class="tech-specs-header">
+                                    <h4>Technical Specs</h4>
+                                </div>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Developer</td>
+                                        <td>OpenAI</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Length</td>
+                                        <td>32K tokens</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Capabilities</td>
+                                        <td>Text, image analysis, coding</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Access</td>
+                                        <td>Free tier, Plus ($20/mo)</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-chart-line"></i> Strengths</h3>
+                            <ul class="feature-list">
+                                <li><strong>Versatility:</strong> Handles diverse tasks from writing to coding.</li>
+                                <li><strong>Web Access:</strong> Provides up-to-date information.</li>
+                                <li><strong>Ecosystem:</strong> Robust API and plugin support.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Limitations</h3>
+                            <ul class="feature-list">
+                                <li><strong>Cost:</strong> Premium features require subscription.</li>
+                                <li><strong>Errors:</strong> Occasional inaccuracies in responses.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-pen-fancy"></i> Content Creation</h4>
+                                    <p>Writing articles, scripts, and marketing copy.</p>
+                                </div>
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-code"></i> Coding</h4>
+                                    <p>Code generation and debugging.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Claude Tab Content -->
+            <div id="claude" class="model-content">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg claude-bg"></div>
+                        <div class="hero-header-content">
+                            <h2>Claude</h2>
+                            <p>Anthropic's safe and reasoning-focused AI</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="chip-container">
+                            <div class="chip claude-bg">
+                                <i class="fas fa-shield-alt"></i> Safety
+                            </div>
+                            <div class="chip claude-bg">
+                                <i class="fas fa-brain"></i> Reasoning
+                            </div>
+                            <div class="chip claude-bg">
+                                <i class="fas fa-file-alt"></i> Writing
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-fingerprint"></i> Overview</h3>
+                            <p>Claude, by Anthropic, prioritizes safety and excels in logical reasoning and natural writing.</p>
+                            
+                            <div class="tech-specs">
+                                <div class="tech-specs-header">
+                                    <h4>Technical Specs</h4>
+                                </div>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Developer</td>
+                                        <td>Anthropic</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Length</td>
+                                        <td>100K tokens</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Capabilities</td>
+                                        <td> Felice</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Access</td>
+                                        <td>Free tier, Pro ($20/mo)</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-chart-line"></i> Strengths</h3>
+                            <ul class="feature-list">
+                                <li><strong>Safety:</strong> Minimal harmful outputs.</li>
+                                <li><strong>Writing:</strong> Human-like, coherent text.</li>
+                                <li><strong>Reasoning:</strong> Strong logical analysis.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Limitations</h3>
+                            <ul class="feature-list">
+                                <li><strong>No Web Access:</strong> Lacks real-time data.</li>
+                                <li><strong>Limited Multimodal:</strong> Basic image support.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-pen-fancy"></i> Writing</h4>
+                                    <p>Creating natural, engaging content.</p>
+                                </div>
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-file-contract"></i> Analysis</h4>
+                                    <p>Logical reasoning for reports.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gemini Tab Content -->
+            <div id="gemini" class="model-content">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg gemini-bg"></div>
+                        <div class="hero-header-content">
+                            <h2>Gemini</h2>
+                            <p>Google's multimodal AI with ecosystem integration</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="chip-container">
+                            <div class="chip gemini-bg">
+                                <i class="fas fa-image"></i> Multimodal
+                            </div>
+                            <div class="chip gemini-bg">
+                                <i class="fas fa-search"></i> Google Search
+                            </div>
+                            <div class="chip gemini-bg">
+                                <i class="fas fa-cloud"></i> Cloud Integration
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-fingerprint"></i> Overview</h3>
+                            <p>Gemini, by Google, excels in multimodal tasks and integrates seamlessly with Google's ecosystem, ideal for multimedia and research.</p>
+                            
+                            <div class="tech-specs">
+                                <div class="tech-specs-header">
+                                    <h4>Technical Specs</h4>
+                                </div>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Developer</td>
+                                        <td>Google</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Length</td>
+                                        <td>200K tokens</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Capabilities</td>
+                                        <td>Text, image, audio processing</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Access</td>
+                                        <td>Free tier, Advanced ($22/mo)</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-chart-line"></i> Strengths</h3>
+                            <ul class="feature-list">
+                                <li><strong>Multimodal:</strong> Handles text, images, and audio.</li>
+                                <li><strong>Integration:</strong> Seamless with Google services.</li>
+                                <li><strong>Real-time:</strong> Access to Google Search.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Limitations</h3>
+                            <ul class="feature-list">
+                                <li><strong>Reasoning:</strong> Weaker in complex logic.</li>
+                                <li><strong>API:</strong> Less flexible than competitors.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-image"></i> Multimedia</h4>
+                                    <p>Creating and analyzing visual content.</p>
+                                </div>
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-search"></i> Research</h4>
+                                    <p>Real-time data exploration.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grok 3 Tab Content -->
+            <div id="grok" class="model-content">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg grok-bg"></div>
+                        <div class="hero-header-content">
+                            <h2>Grok 3</h2>
+                            <p>xAI's truth-seeking AI with real-time data</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="chip-container">
+                            <div class="chip grok-bg">
+                                <i class="fas fa-code"></i> Coding
+                            </div>
+                            <div class="chip grok-bg">
+                                <i class="fas fa-globe"></i> Real-time Data
+                            </div>
+                            <div class="chip grok-bg">
+                                <i class="fas fa-brain"></i> Reasoning
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-fingerprint"></i> Overview</h3>
+                            <p>Grok 3, by xAI, excels in coding, reasoning, and real-time data access via the X platform, offering politically neutral responses.</p>
+                            
+                            <div class="tech-specs">
+                                <div class="tech-specs-header">
+                                    <h4>Technical Specs</h4>
+                                </div>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Developer</td>
+                                        <td>xAI</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Length</td>
+                                        <td>32K tokens</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Capabilities</td>
+                                        <td>Text, coding, image generation</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Access</td>
+                                        <td>Free tier, Premium+ (Contact xAI)</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-chart-line"></i> Strengths</h3>
+                            <ul class="feature-list">
+                                <li><strong>Coding:</strong> Exceptional programming support.</li>
+                                <li><strong>Real-time:</strong> Access to X platform data.</li>
+                                <li><strong>Reasoning:</strong> Politically neutral, truth-seeking responses.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Limitations</h3>
+                            <ul class="feature-list">
+                                <li><strong>Multimodal:</strong> Limited compared to competitors.</li>
+                                <li><strong>Accessibility:</strong> Requires X Premium subscription.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-code"></i> Programming</h4>
+                                    <p>Code generation and debugging.</p>
+                                </div>
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-search"></i> Research</h4>
+                                    <p>Real-time technical and scientific insights.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- DeepSeek Tab Content -->
+            <div id="deepseek" class="model-content">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg deepseek-bg"></div>
+                        <div class="hero-header-content">
+                            <h2>DeepSeek</h2>
+                            <p>Cost-effective AI for coding excellence</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-code"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="chip-container">
+                            <div class="chip deepseek-bg">
+                                <i class="fas fa-code"></i> Coding
+                            </div>
+                            <div class="chip deepseek-bg">
+                                <i class="fas fa-dollar-sign"></i> Cost-effective
+                            </div>
+                            <div class="chip deepseek-bg">
+                                <i class="fas fa-globe"></i> Multilingual
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-fingerprint"></i> Overview</h3>
+                            <p>DeepSeek, a Chinese AI, specializes in coding and technical tasks, offering cost-effective solutions with open-source options.</p>
+                            
+                            <div class="tech-specs">
+                                <div class="tech-specs-header">
+                                    <h4>Technical Specs</h4>
+                                </div>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Developer</td>
+                                        <td>DeepSeek</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Length</td>
+                                        <td>32K tokens</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Capabilities</td>
+                                        <td>Text, coding</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Access</td>
+                                        <td>Free tier, API ($0.5/mo)</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-chart-line"></i> Strengths</h3>
+                            <ul class="feature-list">
+                                <li><strong>Coding:</strong> Exceptional programming skills.</li>
+                                <li><strong>Cost:</strong> Affordable pricing.</li>
+                                <li><strong>Open-source:</strong> R1 model available.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Limitations</h3>
+                            <ul class="feature-list">
+                                <li><strong>Security:</strong> Data privacy concerns.</li>
+                                <li><strong>Writing:</strong> Weak in long-form content.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-code"></i> Programming</h4>
+                                    <p>Code development and optimization.</p>
+                                </div>
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-globe"></i> Multilingual</h4>
+                                    <p>Technical tasks in multiple languages.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Command R+ Tab Content -->
+            <div id="commandr" class="model-content">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg commandr-bg"></div>
+                        <div class="hero-header-content">
+                            <h2>Command R+</h2>
+                            <p>Cohere's enterprise-focused AI with RAG</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="chip-container">
+                            <div class="chip commandr-bg">
+                                <i class="fas fa-search"></i> RAG
+                            </div>
+                            <div class="chip commandr-bg">
+                                <i class="fas fa-globe"></i> Multilingual
+                            </div>
+                            <div class="chip commandr-bg">
+                                <i class="fas fa-briefcase"></i> Enterprise
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-fingerprint"></i> Overview</h3>
+                            <p>Command R+, by Cohere, specializes in retrieval-augmented generation (RAG) for enterprise applications, excelling in information retrieval and multilingual tasks.</p>
+                            
+                            <div class="tech-specs">
+                                <div class="tech-specs-header">
+                                    <h4>Technical Specs</h4>
+                                </div>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Developer</td>
+                                        <td>Cohere</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Length</td>
+                                        <td>128K tokens</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Capabilities</td>
+                                        <td>Text, RAG, multilingual</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Access</td>
+                                        <td>API-based, pricing varies</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-chart-line"></i> Strengths</h3>
+                            <ul class="feature-list">
+                                <li><strong>RAG:</strong> Accurate information retrieval and citation.</li>
+                                <li><strong>Multilingual:</strong> Supports multiple languages.</li>
+                                <li><strong>Enterprise:</strong> Tailored for business applications.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Limitations</h3>
+                            <ul class="feature-list">
+                                <li><strong>General Use:</strong> Less versatile for non-enterprise tasks.</li>
+                                <li><strong>Cost:</strong> API pricing can be high for heavy usage.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-search"></i> Information Retrieval</h4>
+                                    <p>Finding and citing relevant data for reports.</p>
+                                </div>
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-globe"></i> Multilingual Support</h4>
+                                    <p>Enterprise tasks in multiple languages.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Aya Vision Tab Content -->
+            <div id="ayavision" class="model-content">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg ayavision-bg"></div>
+                        <div class="hero-header-content">
+                            <h2>Aya Vision</h2>
+                            <p>Cohere's multimodal AI for visual tasks</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-image"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="chip-container">
+                            <div class="chip ayavision-bg">
+                                <i class="fas fa-image"></i> Image Captioning
+                            </div>
+                            <div class="chip ayavision-bg">
+                                <i class="fas fa-globe"></i> Multilingual
+                            </div>
+                            <div class="chip ayavision-bg">
+                                <i class="fas fa-eye"></i> Visual Analysis
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-fingerprint"></i> Overview</h3>
+                            <p>Aya Vision, by Cohere, excels in image captioning and visual question answering, with strong performance in non-English languages.</p>
+                            
+                            <div class="tech-specs">
+                                <div class="tech-specs-header">
+                                    <h4>Technical Specs</h4>
+                                </div>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Developer</td>
+                                        <td>Cohere</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Length</td>
+                                        <td>32K tokens</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Capabilities</td>
+                                        <td>Text, image analysis, multilingual</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Access</td>
+                                        <td>Free via WhatsApp, API-based</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-chart-line"></i> Strengths</h3>
+                            <ul class="feature-list">
+                                <li><strong>Image Captioning:</strong> Accurate descriptions of images.</li>
+                                <li><strong>Multilingual:</strong> Strong non-English support.</li>
+                                <li><strong>Accessibility:</strong> Free access via WhatsApp.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Limitations</h3>
+                            <ul class="feature-list">
+                                <li><strong>Narrow Focus:</strong> Primarily visual tasks.</li>
+                                <li><strong>Limited API:</strong> Less flexible for developers.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-image"></i> Visual Analysis</h4>
+                                    <p>Answering questions about images.</p>
+                                </div>
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-globe"></i> Multilingual</h4>
+                                    <p>Visual tasks in non-English languages.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Qwen 2.5 Tab Content -->
+            <div id="qwen" class="model-content">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg qwen-bg"></div>
+                        <div class="hero-header-content">
+                            <h2>Qwen 2.5</h2>
+                            <p>Alibaba's multilingual AI for coding and e-commerce</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="chip-container">
+                            <div class="chip qwen-bg">
+                                <i class="fas fa-code"></i> Coding
+                            </div>
+                            <div class="chip qwen-bg">
+                                <i class="fas fa-globe"></i> Multilingual
+                            </div>
+                            <div class="chip qwen-bg">
+                                <i class="fas fa-shopping-cart"></i> E-commerce
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-fingerprint"></i> Overview</h3>
+                            <p>Qwen 2.5, by Alibaba, supports 29 languages and 92 programming languages, ideal for coding and e-commerce applications.</p>
+                            
+                            <div class="tech-specs">
+                                <div class="tech-specs-header">
+                                    <h4>Technical Specs</h4>
+                                </div>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Developer</td>
+                                        <td>Alibaba</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Length</td>
+                                        <td>128K tokens</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Capabilities</td>
+                                        <td>Text, coding, multilingual</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Access</td>
+                                        <td>Free tier, Alibaba Cloud API</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-chart-line"></i> Strengths</h3>
+                            <ul class="feature-list">
+                                <li><strong>Multilingual:</strong> Supports 29 languages.</li>
+                                <li><strong>Coding:</strong> Handles 92 programming languages.</li>
+                                <li><strong>E-commerce:</strong> Tailored for virtual assistants.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Limitations</h3>
+                            <ul class="feature-list">
+                                <li><strong>Regional Restrictions:</strong> Limited access in some regions.</li>
+                                <li><strong>General Use:</strong> Less versatile for non-technical tasks.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-code"></i> Programming</h4>
+                                    <p>Code development across multiple languages.</p>
+                                </div>
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-shopping-cart"></i> E-commerce</h4>
+                                    <p>Virtual assistants for online platforms.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Llama 3.3 Tab Content -->
+            <div id="llama" class="model-content">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg llama-bg"></div>
+                        <div class="hero-header-content">
+                            <h2>Llama 3.3</h2>
+                            <p>Meta's open-source AI for research</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-code-branch"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="chip-container">
+                            <div class="chip llama-bg">
+                                <i class="fas fa-code"></i> Open-source
+                            </div>
+                            <div class="chip llama-bg">
+                                <i class="fas fa-cogs"></i> Customizable
+                            </div>
+                            <div class="chip llama-bg">
+                                <i class="fas fa-flask"></i> Research
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-fingerprint"></i> Overview</h3>
+                            <p>Llama 3.3, by Meta AI, is an open-source model with 70B parameters, optimized for coding and research applications.</p>
+                            
+                            <div class="tech-specs">
+                                <div class="tech-specs-header">
+                                    <h4>Technical Specs</h4>
+                                </div>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Developer</td>
+                                        <td>Meta AI</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Length</td>
+                                        <td>8K tokens</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Capabilities</td>
+                                        <td>Text, coding</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Access</td>
+                                        <td>Open-source, free</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-chart-line"></i> Strengths</h3>
+                            <ul class="feature-list">
+                                <li><strong>Open-source:</strong> Freely available for customization.</li>
+                                <li><strong>Coding:</strong> Strong programming performance.</li>
+                                <li><strong>Research:</strong> Ideal for academic and development use.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Limitations</h3>
+                            <ul class="feature-list">
+                                <li><strong>Resources:</strong> Requires significant compute power.</li>
+                                <li><strong>Support:</strong> Limited official support.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-code"></i> Development</h4>
+                                    <p>Building custom AI solutions.</p>
+                                </div>
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-flask"></i> Research</h4>
+                                    <p>Academic and experimental projects.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- EXAONE 3.0 Tab Content -->
+            <div id="exaone" class="model-content">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg exaone-bg"></div>
+                        <div class="hero-header-content">
+                            <h2>EXAONE 3.0</h2>
+                            <p>LG's bilingual AI for enterprise</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="chip-container">
+                            <div class="chip exaone-bg">
+                                <i class="fas fa-file-alt"></i> Document Analysis
+                            </div>
+                            <div class="chip exaone-bg">
+                                <i class="fas fa-code"></i> Coding
+                            </div>
+                            <div class="chip exaone-bg">
+                                <i class="fas fa-globe"></i>
+                                Bilingual
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-fingerprint"></i> Overview</h3>
+                            <p>EXAONE 3.0, developed by LG AI Research, is a bilingual AI model optimized for English and Korean, excelling in document analysis and coding for enterprise applications.</p>
+                            
+                            <div class="tech-specs">
+                                <div class="tech-specs-header">
+                                    <h4>Technical Specs</h4>
+                                </div>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Developer</td>
+                                        <td>LG AI Research</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Length</td>
+                                        <td>32K tokens</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Capabilities</td>
+                                        <td>Text, coding, document analysis, bilingual (English, Korean)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Access</td>
+                                        <td>Enterprise API, contact LG for pricing</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-chart-line"></i> Strengths</h3>
+                            <ul class="feature-list">
+                                <li><strong>Document Analysis:</strong> Efficient processing of complex documents.</li>
+                                <li><strong>Bilingual:</strong> Seamless support for English and Korean.</li>
+                                <li><strong>Coding:</strong> Strong performance in technical programming tasks.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Limitations</h3>
+                            <ul class="feature-list">
+                                <li><strong>Accessibility:</strong> Limited to enterprise clients.</li>
+                                <li><strong>Multimodal:</strong> Minimal support for non-text inputs.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-file-alt"></i> Document Processing</h4>
+                                    <p>Analyzing and summarizing enterprise documents.</p>
+                                </div>
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-code"></i> Software Development</h4>
+                                    <p>Code generation and optimization for bilingual projects.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Minimax-Text-01 Tab Content -->
+            <div id="minimax" class="model-content">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg minimax-bg"></div>
+                        <div class="hero-header-content">
+                            <h2>Minimax-Text-01</h2>
+                            <p>Minimax's AI for long-context reasoning</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-file-text"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="chip-container">
+                            <div class="chip minimax-bg">
+                                <i class="fas fa-file-text"></i> Long Context
+                            </div>
+                            <div class="chip minimax-bg">
+                                <i class="fas fa-brain"></i> Reasoning
+                            </div>
+                            <div class="chip minimax-bg">
+                                <i class="fas fa-file-alt"></i> Summarization
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-fingerprint"></i> Overview</h3>
+                            <p>Minimax-Text-01, by Minimax, is designed for long-context tasks, excelling in document summarization and complex reasoning.</p>
+                            
+                            <div class="tech-specs">
+                                <div class="tech-specs-header">
+                                    <h4>Technical Specs</h4>
+                                </div>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Developer</td>
+                                        <td>Minimax</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Length</td>
+                                        <td>200K tokens</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Capabilities</td>
+                                        <td>Text, reasoning, summarization</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Access</td>
+                                        <td>API-based, contact Minimax for pricing</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-chart-line"></i> Strengths</h3>
+                            <ul class="feature-list">
+                                <li><strong>Long Context:</strong> Handles extended documents effectively.</li>
+                                <li><strong>Reasoning:</strong> Strong performance in analytical tasks.</li>
+                                <li><strong>Summarization:</strong> Concise and accurate document summaries.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Limitations</h3>
+                            <ul class="feature-list">
+                                <li><strong>Multimodal:</strong> Limited support for non-text inputs.</li>
+                                <li><strong>Accessibility:</strong> Primarily API-based with restricted access.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-file-alt"></i> Document Summarization</h4>
+                                    <p>Condensing lengthy reports and articles.</p>
+                                </div>
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-brain"></i> Analytical Reasoning</h4>
+                                    <p>Complex problem-solving and data analysis.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Ministral 3B Tab Content -->
+            <div id="ministral" class="model-content">
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-header-bg ministral-bg"></div>
+                        <div class="hero-header-content">
+                            <h2>Ministral 3B</h2>
+                            <p>Mixtral's efficient AI for edge devices</p>
+                        </div>
+                        <div class="hero-logo">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="chip-container">
+                            <div class="chip ministral-bg">
+                                <i class="fas fa-tachometer-alt"></i> Low-latency
+                            </div>
+                            <div class="chip ministral-bg">
+                                <i class="fas fa-microchip"></i> Efficient
+                            </div>
+                            <div class="chip ministral-bg">
+                                <i class="fas fa-mobile-alt"></i> Edge Devices
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-fingerprint"></i> Overview</h3>
+                            <p>Ministral 3B, by Mixtral, is a lightweight, low-latency AI model optimized for edge devices, delivering efficient performance for quick tasks.</p>
+                            
+                            <div class="tech-specs">
+                                <div class="tech-specs-header">
+                                    <h4>Technical Specs</h4>
+                                </div>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Developer</td>
+                                        <td>Mixtral</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Length</td>
+                                        <td>8K tokens</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Capabilities</td>
+                                        <td>Text, lightweight processing</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Access</td>
+                                        <td>Open-source, free</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-chart-line"></i> Strengths</h3>
+                            <ul class="feature-list">
+                                <li><strong>Efficiency:</strong> Low resource consumption for edge devices.</li>
+                                <li><strong>Low-latency:</strong> Fast response times for real-time tasks.</li>
+                                <li><strong>Open-source:</strong> Freely available for customization.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Limitations</h3>
+                            <ul class="feature-list">
+                                <li><strong>Scale:</strong> Limited capacity for complex tasks.</li>
+                                <li><strong>Multimodal:</strong> Text-only processing.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="section">
+                            <h3><i class="fas fa-briefcase"></i> Use Cases</h3>
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-mobile-alt"></i> Edge Computing</h4>
+                                    <p>Real-time processing on mobile and IoT devices.</p>
+                                </div>
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-tasks"></i> Quick Tasks</h4>
+                                    <p>Simple text-based automation and responses.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>    
+
+
+
+
+                                <script>
+                                    function openTab(tabName) {
+                                        // Hide all tab contents
+                                        const contents = document.querySelectorAll('.model-content');
+                                        contents.forEach(content => {
+                                            content.classList.remove('active');
+                                        });
+                            
+                                        // Remove active class from all tabs
+                                        const tabs = document.querySelectorAll('.model-tab');
+                                        tabs.forEach(tab => {
+                                            tab.classList.remove('active');
+                                        });
+                            
+                                        // Show selected tab content and mark tab as active
+                                        document.getElementById(tabName).classList.add('active');
+                                        document.querySelector(`.model-tab[onclick="openTab('${tabName}')"]`).classList.add('active');
+                                    }
+                            
+                                    function toggleTheme() {
+                                        document.body.classList.toggle('dark-mode');
+                                        const themeToggle = document.querySelector('.theme-toggle i');
+                                        themeToggle.classList.toggle('fa-moon');
+                                        themeToggle.classList.toggle('fa-sun');
+                                    }
+                                </script>
